@@ -1,18 +1,17 @@
 #include "application.h"
 
-#include "spark_disable_wlan.h"
-#include "spark_disable_cloud.h"
-
 #include "p44_ws2812.h"
 #include "font.cpp"
 #include "mtutilities.h"
 
 #include "elapsedMills.h"
 
+//#define	ADDCHEERLIGHTS
 
 // Main program, torch simulation
 // ==============================
 
+SYSTEM_MODE(SEMI_AUTOMATIC);
 
 #define WIFI_JUMPER	D0
 
@@ -553,7 +552,7 @@ void injectRandom()
   }
 }
 
-/*
+#if defined (ADDCHEERLIGHTS)
 // Cheerlights interface
 // =====================
 // see cheerlights.com
@@ -671,7 +670,7 @@ void checkCheerlights()
     }
   }
 }
-*/
+#endif
 
 
 // Main program
@@ -679,11 +678,13 @@ void checkCheerlights()
 
 void setup()
 {
-
+  // If there is no jumper to connect pin WIFI_JUMPER to ground then
+  // run code assuming wifi is available.  Otherwise run demo code
+  // with wifi disabled.
   pinMode(WIFI_JUMPER, INPUT_PULLUP);
+  
   if (digitalRead(WIFI_JUMPER) == HIGH) {
-	WiFi.on();
-    initWifi();
+	//WiFi.on();
 	Spark.connect();
 	}
   else {
