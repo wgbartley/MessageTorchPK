@@ -1,6 +1,5 @@
 #include "application.h"
 
-//#include "p44_ws2812.h"
 #include "font.cpp"
 #include "mtutilities.h"
 
@@ -10,10 +9,6 @@
 
 // Main program, torch simulation
 // ==============================
-boolean demoActive;
-elapsedMillis	demoTime;
-enum demoStates {FLAMES, TEXT, RAINBOW, RAINBOWTEXT};
-demoStates demoMode;
 
 #include "neopixel.h"
 #define	PIXEL_COUNT		300
@@ -630,31 +625,6 @@ void loop()
   // check cheerlights
   //checkCheerlights();
   //updateBackgroundWithCheerColor();
-
-  if ((demoActive == true) && (demoTime >= 4000)) {
-	demoTime = 0;
-
-	switch (demoMode) {
-	case FLAMES:
-		newMessage("");
-		mode = mode_torch;
-		demoMode = TEXT;
-		break;
-	case TEXT:
-		newMessage("SPARK");
-		demoMode = RAINBOW;
-		break;
-	case RAINBOW:
-		newMessage("");
-		mode = mode_colorcycle;
-		demoMode = RAINBOWTEXT;
-		break;
-	case RAINBOWTEXT:
-		newMessage("SPARK");
-		demoMode = FLAMES;
-		break;
-	}
-  }
 
   // render the text
   renderText();
