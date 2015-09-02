@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "p44_ws2812.h"
+//#include "p44_ws2812.h"
 #include "font.cpp"
 #include "mtutilities.h"
 
@@ -10,25 +10,22 @@
 
 // Main program, torch simulation
 // ==============================
-
-SYSTEM_MODE(SEMI_AUTOMATIC);
-
-#define WIFI_JUMPER	D0
-
 boolean demoActive;
 elapsedMillis	demoTime;
 enum demoStates {FLAMES, TEXT, RAINBOW, RAINBOWTEXT};
 demoStates demoMode;
 
-const uint16_t levels = 17; // Hot fix: had to reduce number of LEDs because new spark.core FW has less RAM free for user's app, otherwise crashes.
-const uint16_t ledsPerLevel = 16; // approx
+#include "neopixel.h"
+#define	PIXEL_COUNT		300
+#define	PIXEL_PIN		D0
+#define	PIXEL_TYPE		WS2812B
+Adafruit_NeoPixel leds = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
+const uint16_t levels = 20; // Hot fix: had to reduce number of LEDs because new spark.core FW has less RAM free for user's app, otherwise crashes.
+const uint16_t ledsPerLevel = 15; // approx
 const uint16_t numLeds = ledsPerLevel*levels; // total number of LEDs
 
-p44_ws2812 leds(numLeds); // for 4m strip with 240 LEDs
-
 // global parameters
-
 enum {
   mode_off = 0,
   mode_torch = 1, // torch
@@ -40,8 +37,8 @@ byte mode = mode_torch; // main operation mode
 int brightness = 255; // overall brightness
 byte fade_base = 140; // crossfading base brightness level
 
-// text params
 
+// text params
 int text_intensity = 255; // intensity of last column of text (where text appears)
 int cycles_per_px = 5;
 int text_repeats = 15; // text displays until faded down to almost zero
@@ -54,7 +51,6 @@ byte blue_text = 180;
 
 
 // torch parameters
-
 uint16_t cycle_wait = 1; // 0..255
 
 byte flame_min = 100; // 0..255
@@ -83,17 +79,14 @@ int blue_energy = 0;
 
 
 // lamp mode params
-
 byte lamp_red = 220;
 byte lamp_green = 220;
 byte lamp_blue = 200;
 
 
 // cheerlight params
-
 uint8_t cheer_brightness = 100; // initial brightness
 uint8_t cheer_fade_cycles = 30; // fade cheer color one brightness step every 30 cycles
-
 
 
 // Pre-declaration for compiler
@@ -108,13 +101,6 @@ void calcNextColors();
 void injectRandom();
 void initWifi();
 
-
-void initWifi() {
-    unsigned long aiIntervalList[16];
-    for (int i=0; i<16; i++) { aiIntervalList[i] = 2000; }
-    wlan_ioctl_set_scan_params( 4000, 100, 100, 5, 0x1fff, -80, 0, 205, aiIntervalList );
-    wlan_start(0);
-}
 
 
 // Cloud API
@@ -221,58 +207,6 @@ int handleParams(String command)
   return 1;
 }
 
-/*
-const int VDSD_API_VERSION=1;
-
-// this function automagically gets called upon a matching POST request
-int handleVdsd(String command)
-{
-  String cmd = command;
-  String value;
-  bool hasValue = false;
-  int j = command.indexOf('=');
-  if (j>=0) {
-    hasValue = true;
-    String c = command.substring(0,j);
-    cmd = c;
-    String v = command.substring(j+1);
-    value = v;
-  }
-  if (cmd=="version") {
-    // API version
-    return VDSD_API_VERSION;
-  }
-  else if (cmd=="config") {
-    // 0xssiibboo, ss=# of sensors, ii=# of binary inputs, bb=# of buttons, oo=# of outputs
-    return 0x00000001; // single output
-  }
-  else if (cmd=="output0") {
-    // primary output is brightness
-    if (hasValue) {
-      brightness = value.toInt();
-    }
-    else {
-      return brightness;
-    }
-  }
-  else if (cmd=="state0") {
-    // state is brightness + mode for now: 0xrrrrmmbb, rrrr=reserved, mm=mode, bb=brightness
-    if (hasValue) {
-      uint32_t v = value.toInt();
-      brightness = v & 0xFF;
-      mode = (v>>8) & 0xFF;
-    }
-    else {
-      return
-        (brightness & 0xFF) |
-        (mode & 0xFF)<<8;
-    }
-  }
-  return 0;
-}
-*/
-
-
 
 // text layer
 // ==========
@@ -299,21 +233,21 @@ int newMessage(String aText)
       c =(hexToInt(aText[i+1])<<4) + hexToInt(aText[i+2]);
       i += 2;
     }
-    // Ä = C3 84
-    // Ö = C3 96
-    // Ü = C3 9C
-    // ä = C3 A4
-    // ö = C3 B6
-    // ü = C3 BC
+    // ? = C3 84
+    // ? = C3 96
+    // ? = C3 9C
+    // ? = C3 A4
+    // ? = C3 B6
+    // ? = C3 BC
     else if (aText[i]==0xC3) {
       if ((int)aText.length()<=i+1) break; // end of text
       switch (aText[i+1]) {
-        case 0x84: c = 0x80; break; // Ä
-        case 0x96: c = 0x81; break; // Ö
-        case 0x9C: c = 0x82; break; // Ü
-        case 0xA4: c = 0x83; break; // ä
-        case 0xB6: c = 0x84; break; // ö
-        case 0xBC: c = 0x85; break; // ü
+        case 0x84: c = 0x80; break; // ?
+        case 0x96: c = 0x81; break; // ?
+        case 0x9C: c = 0x82; break; // ?
+        case 0xA4: c = 0x83; break; // ?
+        case 0xB6: c = 0x84; break; // ?
+        case 0xBC: c = 0x85; break; // ?
         default: c = 0x7F; break; // unknown
       }
       i += 1;
@@ -678,28 +612,13 @@ void checkCheerlights()
 
 void setup()
 {
-  // If there is no jumper to connect pin WIFI_JUMPER to ground then
-  // run code assuming wifi is available.  Otherwise run demo code
-  // with wifi disabled.
-  pinMode(WIFI_JUMPER, INPUT_PULLUP);
-  
-  if (digitalRead(WIFI_JUMPER) == HIGH) {
-	//WiFi.on();
-	Spark.connect();
-	}
-  else {
-	demoActive = true;	//Wifi is disabled so go into demo mode
-	demoTime = 0;
-	demoMode = TEXT; 
-	};
-
   resetEnergy();
   resetText();
   leds.begin();
+
   // remote control
   Spark.function("params", handleParams); // parameters
   Spark.function("message", newMessage); // text message display
-//  Spark.function("vdsd", handleVdsd); // virtual digitalstrom device interface
 }
 
 
@@ -714,7 +633,7 @@ void loop()
 
   if ((demoActive == true) && (demoTime >= 4000)) {
 	demoTime = 0;
-	
+
 	switch (demoMode) {
 	case FLAMES:
 		newMessage("");
@@ -733,7 +652,7 @@ void loop()
 	case RAINBOWTEXT:
 		newMessage("SPARK");
 		demoMode = FLAMES;
-		break;	
+		break;
 	}
   }
 
