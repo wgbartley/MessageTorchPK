@@ -95,6 +95,9 @@ void calcNextEnergy();
 void calcNextColors();
 void injectRandom();
 void initWifi();
+void EEPROM_Check();
+void EEPROM_SaveAll();
+void EEPROM_Load();
 
 
 
@@ -114,89 +117,128 @@ int handleParams(String command)
     String key = command.substring(p,j);
     String value = command.substring(j+1,i);
     int val = value.toInt();
+
     // global params
-    if (key=="wait")
+    if (key=="wait") {
       cycle_wait = val;
-    else if (key=="mode")
+      EEPROM.write(1, val);
+    } else if (key=="mode") {
       mode = val;
-    else if (key=="brightness")
+      EEPROM.write(2, val);
+    } else if (key=="brightness") {
       brightness = val;
-    else if (key=="fade_base")
+      EEPROM.write(3, val);
+    } else if (key=="fade_base") {
       fade_base = val;
+      EEPROM.write(4, val);
     // cheerlight params
-    else if (key=="cheer_brightness")
+    } else if (key=="cheer_brightness") {
       cheer_brightness = val;
-    else if (key=="cheer_fade_cycles")
+      EEPROM.write(5, val);
+    } else if (key=="cheer_fade_cycles") {
       cheer_fade_cycles = val;
+      EEPROM.write(6, val);
     // lamp params
-    else if (key=="lamp_red")
+    } else if (key=="lamp_red") {
       lamp_red = val;
-    else if (key=="lamp_green")
+      EEPROM.write(7, val);
+    } else if (key=="lamp_green") {
       lamp_green = val;
-    else if (key=="lamp_blue")
+      EEPROM.write(8, val);
+    } else if (key=="lamp_blue") {
       lamp_blue = val;
+      EEPROM.write(9, val);
     // text color params
-    else if (key=="red_text")
+    } else if (key=="red_text") {
       red_text = val;
-    else if (key=="green_text")
+      EEPROM.write(10, val);
+    } else if (key=="green_text") {
       green_text = val;
-    else if (key=="blue_text")
+      EEPROM.write(11, val);
+    } else if (key=="blue_text") {
       blue_text = val;
+      EEPROM.write(12, val);
     // text params
-    else if (key=="cycles_per_px")
+    } else if (key=="cycles_per_px") {
       cycles_per_px = val;
-    else if (key=="text_repeats")
+      EEPROM.write(13, val);
+    } else if (key=="text_repeats") {
       text_repeats = val;
-    else if (key=="text_base_line")
+      EEPROM.write(14, val);
+    } else if (key=="text_base_line") {
       text_base_line = val;
-    else if (key=="raise_text_by")
+      EEPROM.write(15, val);
+    } else if (key=="raise_text_by") {
       raise_text_by = val;
-    else if (key=="fade_per_repeat")
+      EEPROM.write(16, val);
+    } else if (key=="fade_per_repeat") {
       fade_per_repeat = val;
-    else if (key=="text_intensity")
+      EEPROM.write(17, val);
+    } else if (key=="text_intensity") {
       text_intensity = val;
+      EEPROM.write(18, val);
     // torch color params
-    else if (key=="red_bg")
+    } else if (key=="red_bg") {
       red_bg = val;
-    else if (key=="green_bg")
+      EEPROM.write(19, val);
+    } else if (key=="green_bg") {
       green_bg = val;
-    else if (key=="blue_bg")
+      EEPROM.write(20, val);
+    } else if (key=="blue_bg") {
       blue_bg = val;
-    else if (key=="red_bias")
+      EEPROM.write(21, val);
+    } else if (key=="red_bias") {
       red_bias = val;
-    else if (key=="green_bias")
+      EEPROM.write(22, val);
+    } else if (key=="green_bias") {
       green_bias = val;
-    else if (key=="blue_bias")
+      EEPROM.write(23, val);
+    } else if (key=="blue_bias") {
       blue_bias = val;
-    else if (key=="red_energy")
+      EEPROM.write(24, val);
+    } else if (key=="red_energy") {
       red_energy = val;
-    else if (key=="green_energy")
+      EEPROM.write(25, val);
+    } else if (key=="green_energy") {
       green_energy = val;
-    else if (key=="blue_energy")
+      EEPROM.write(26, val);
+    } else if (key=="blue_energy") {
       blue_energy = val;
+      EEPROM.write(27, val);
     // torch params
-    else if (key=="spark_prob") {
+    } else if (key=="spark_prob") {
       random_spark_probability = val;
+      EEPROM.write(28, val);
       resetEnergy();
     }
-    else if (key=="spark_cap")
+    else if (key=="spark_cap") {
       spark_cap = val;
-    else if (key=="spark_tfr")
+      EEPROM.write(29, val);
+    } else if (key=="spark_tfr") {
       spark_tfr = val;
-    else if (key=="side_rad")
+      EEPROM.write(30, val);
+    } else if (key=="side_rad") {
       side_rad = val;
-    else if (key=="up_rad")
+      EEPROM.write(31, val);
+    } else if (key=="up_rad") {
       up_rad = val;
-    else if (key=="heat_cap")
+      EEPROM.write(32, val);
+    } else if (key=="heat_cap") {
       heat_cap = val;
-    else if (key=="flame_min")
+      EEPROM.write(33, val);
+    } else if (key=="flame_min") {
       flame_min = val;
-    else if (key=="flame_max")
+      EEPROM.write(34, val);
+    } else if (key=="flame_max") {
       flame_max = val;
-    else if (key=="spark_min")
+      EEPROM.write(35, val);
+    } else if (key=="spark_min") {
       spark_min = val;
-    else if (key=="spark_max")
+      EEPROM.write(36, val);
+    } else if (key=="spark_max") {
       spark_max = val;
+      EEPROM.write(37, val);
+    }
     p = i+1;
   }
   return 1;
@@ -675,4 +717,135 @@ void loop()
   leds.show();
   // wait
   delay(cycle_wait); // latch & reset needs 50 microseconds pause, at least.
+}
+
+
+void EEPROM_Check() {
+  if(EEPROM.read(0)==137)
+    EEPROM_Load();
+  else
+    EEPROM_SaveAll();
+}
+
+
+void EEPROM_SaveAll() {
+  EEPROM.write(1, cycle_wait);
+  EEPROM.write(2, mode);
+  EEPROM.write(3, brightness);
+  EEPROM.write(4, fade_base);
+  EEPROM.write(5, cheer_brightness);
+  EEPROM.write(6, cheer_fade_cycles);
+  EEPROM.write(7, lamp_red);
+  EEPROM.write(8, lamp_green);
+  EEPROM.write(9, lamp_blue);
+  EEPROM.write(10, red_text);
+  EEPROM.write(11, green_text);
+  EEPROM.write(12, blue_text);
+  EEPROM.write(13, cycles_per_px);
+  EEPROM.write(14, text_repeats);
+  EEPROM.write(15, text_base_line);
+  EEPROM.write(16, raise_text_by);
+  EEPROM.write(17, fade_per_repeat);
+  EEPROM.write(18, text_intensity);
+  EEPROM.write(19, red_bg);
+  EEPROM.write(20, green_bg);
+  EEPROM.write(21, blue_bg);
+  EEPROM.write(22, red_bias);
+  EEPROM.write(23, green_bias);
+  EEPROM.write(24, blue_bias);
+  EEPROM.write(25, red_energy);
+  EEPROM.write(26, green_energy);
+  EEPROM.write(27, blue_energy);
+  EEPROM.write(28, random_spark_probability);
+  EEPROM.write(29, spark_cap);
+  EEPROM.write(30, spark_tfr);
+  EEPROM.write(31, side_rad);
+  EEPROM.write(32, up_rad);
+  EEPROM.write(33, heat_cap);
+  EEPROM.write(34, flame_min);
+  EEPROM.write(35, flame_max);
+  EEPROM.write(36, spark_min);
+  EEPROM.write(37, spark_max);
+}
+
+
+void EEPROM_Load() {
+  /**
+   * EEPROM Table
+   * ============
+   *  1 = wait
+   *  2 = mode
+   *  3 = brightness
+   *  4 = fade_base
+   *  5 = cheer_brightness
+   *  6 = cheer_fade_cycles
+   *  7 = lamp_red
+   *  8 = lamp_green
+   *  9 = lamp_blue
+   * 10 = red_text
+   * 11 = green_text
+   * 12 = blue_text
+   * 13 = cycles_per_px
+   * 14 = text_repeats
+   * 15 = text_base_line
+   * 16 = raise_text_by
+   * 17 = fade_per_repeat
+   * 18 = text_intensity
+   * 19 = red_bg
+   * 20 = green_bg
+   * 21 = blue_bg
+   * 22 = red_bias
+   * 23 = green_bias
+   * 24 = blue_bias
+   * 25 = red_energy
+   * 26 = green_energy
+   * 27 = blue_energy
+   * 28 = spark_prob
+   * 29 = spark_cap
+   * 30 = spark_tfr
+   * 31 = side_rad
+   * 32 = up_rad
+   * 33 = heat_cap
+   * 34 = flame_min
+   * 35 = flame_max
+   * 36 = spark_min
+   * 37 = spark_max
+   **/
+   cycle_wait = EEPROM.read(1);
+   mode = EEPROM.read(2);
+   brightness  = EEPROM.read(3);
+   fade_base = EEPROM.read(4);
+   cheer_brightness = EEPROM.read(5);
+   cheer_fade_cycles = EEPROM.read(6);
+   lamp_red = EEPROM.read(7);
+   lamp_green = EEPROM.read(8);
+   lamp_blue = EEPROM.read(9);
+   red_text = EEPROM.read(10);
+   green_text = EEPROM.read(11);
+   blue_text = EEPROM.read(12);
+   cycles_per_px = EEPROM.read(13);
+   text_repeats = EEPROM.read(14);
+   text_base_line = EEPROM.read(15);
+   raise_text_by = EEPROM.read(16);
+   fade_per_repeat = EEPROM.read(17);
+   text_intensity = EEPROM.read(18);
+   red_bg = EEPROM.read(19);
+   green_bg = EEPROM.read(20);
+   blue_bg = EEPROM.read(21);
+   red_bias = EEPROM.read(22);
+   green_bias = EEPROM.read(23);
+   blue_bias = EEPROM.read(24);
+   red_energy = EEPROM.read(25);
+   green_energy = EEPROM.read(26);
+   blue_energy = EEPROM.read(27);
+   random_spark_probability = EEPROM.read(28);
+   spark_cap = EEPROM.read(29);
+   spark_tfr = EEPROM.read(30);
+   side_rad = EEPROM.read(31);
+   up_rad = EEPROM.read(32);
+   heat_cap = EEPROM.read(33);
+   flame_min = EEPROM.read(34);
+   flame_max = EEPROM.read(35);
+   spark_min = EEPROM.read(36);
+   spark_max = EEPROM.read(37);
 }
